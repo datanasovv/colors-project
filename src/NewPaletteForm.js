@@ -14,6 +14,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import { withStyles } from '@material-ui/styles';
 import { ChromePicker } from 'react-color';
+import DraggableColorBox from './DraggableColorBox';
 
 const drawerWidth = 400;
 
@@ -58,6 +59,7 @@ const styles = makeStyles((theme) => ({
     },
     content: {
         flexGrow: 1,
+        height: "100vh",
         padding: theme.spacing(3),
         transition: theme.transitions.create('margin', {
             easing: theme.transitions.easing.sharp,
@@ -79,14 +81,25 @@ function NewPaletteForm() {
     const classes = styles();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
+    const [curColor, setCurColor] = React.useState('teal');
+    const [colors, setColor] = React.useState(["purple", "#e15764"])
 
     const handleDrawerOpen = () => {
         setOpen(true);
     };
+    const handleColor = (color) => {
+        setCurColor(color);
+    }
+    const addNewColor = () => {
+        setColor([...colors, curColor])
+    }
 
     const handleDrawerClose = () => {
         setOpen(false);
     };
+    const updateCurrentColor = (newColor) => {
+        handleColor(newColor.hex)
+    }
 
     return (
         <div className={classes.root} >
@@ -139,10 +152,17 @@ function NewPaletteForm() {
                     </Button>
                 </div>
                 <ChromePicker
-                    color="purple"
-                    onChangeComplete={(newColor) => console.log(newColor)}
+                    color={curColor}
+                    onChangeComplete={(newColor) => updateCurrentColor(newColor)}
                 />
-                <Button variant="contained" color="primary">ADD COLOR</Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    style={{ backgroundColor: curColor }}
+                    onClick={addNewColor}
+                >
+                    ADD COLOR
+                     </Button>
             </Drawer>
             <main
                 className={clsx(classes.content, {
@@ -150,8 +170,13 @@ function NewPaletteForm() {
                 })}
             >
                 <div className={classes.drawerHeader} />
+
+                {colors.map(color => (
+                    <DraggableColorBox color={color} />
+                ))}
+
             </main>
-        </div>
+        </div >
     );
 }
 export default withStyles(styles, { withTheme: true })(NewPaletteForm)
