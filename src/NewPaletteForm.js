@@ -78,13 +78,14 @@ const styles = makeStyles((theme) => ({
 }));
 
 
-function NewPaletteForm() {
+function NewPaletteForm({ savePalette, palettes, ...props }) {
     const classes = styles();
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const [curColor, setCurColor] = React.useState('teal');
     const [colors, setColor] = React.useState([]);
-    const [newName, setNewName] = React.useState("");
+    const [newColorName, setNewColorName] = React.useState("");
+    const [newPaletteName, setNewPaletteName] = React.useState("")
     ValidatorForm.addValidationRule('isColorNameUnique', value =>
         colors.every(
             ({ name }) => name.toLowerCase() !== value.toLowerCase()
@@ -95,6 +96,11 @@ function NewPaletteForm() {
             ({ color }) => color !== curColor
         )
     )
+    ValidatorForm.addValidationRule('isPaletteNameUnique', value =>
+        palettes.every(
+            ({ paletteName }) => paletteName.toLowerCase() !== value.toLowerCase()
+        )
+    )
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -103,19 +109,35 @@ function NewPaletteForm() {
         setCurColor(color);
     }
     const addNewColor = () => {
-        const newColor = { color: curColor, name: newName }
+        const newColor = { color: curColor, name: newColorName }
         setColor([...colors, newColor])
-        setNewName("")
+        setNewColorName("")
     }
 
     const handleDrawerClose = () => {
         setOpen(false);
-    };
+    }
     const updateCurrentColor = (newColor) => {
         handleColor(newColor.hex);
     }
-    const handleChange = (evt) => {
-        setNewName(evt.target.value);
+    const handleChangeColorName = (evt) => {
+        setNewColorName(
+            evt.target.value
+        );
+    }
+    const handleChangePaletteName = (evt) => {
+        setNewPaletteName(evt.target.value)
+    }
+    const handleSubmit = () => {
+        let newName = newPaletteName
+        const newPalette = {
+            paletteName: newName,
+            id: newName.toLowerCase().replace(/ /g, "-"),
+            colors: colors
+        }
+        savePalette(newPalette)
+        props.history.push("/")
+
     }
 
     return (
@@ -123,6 +145,7 @@ function NewPaletteForm() {
             <CssBaseline />
             <AppBar
                 position="fixed"
+                color="default"
                 className={clsx(classes.appBar, {
                     [classes.appBarShift]: open,
                 })}
@@ -139,7 +162,24 @@ function NewPaletteForm() {
                     </IconButton>
                     <Typography variant="h6" noWrap>
                         Persistent drawer
-          </Typography>
+                    </Typography>
+                    <ValidatorForm onSubmit={handleSubmit}>
+                        <TextValidator
+                            label="Palette Name"
+                            value={newPaletteName}
+                            name="NewPaletteName"
+                            onChange={(evt) => handleChangePaletteName(evt)}
+                            validators={["required","isPaletteNameUnique"]}
+                            errorMessages={["Enter Palette Name","Name already used"]}
+                        />
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            type="submit"
+                        >
+                            Save Palette
+                    </Button>
+                    </ValidatorForm>
                 </Toolbar>
             </AppBar>
             <Drawer
@@ -174,8 +214,9 @@ function NewPaletteForm() {
                 />
                 <ValidatorForm onSubmit={addNewColor}>
                     <TextValidator
-                        value={newName}
-                        onChange={(evt) => handleChange(evt)}
+                        value={newColorName}
+                        name="NewColorName"
+                        onChange={(evt) => handleChangeColorName(evt)}
                         validators={["required", "isColorNameUnique", "isColorUnique"]}
                         errorMessages={["Enter a color name", "Color name must be unique", "Color already used!"]}
                     />
